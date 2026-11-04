@@ -12,14 +12,15 @@ def plot_cumulative_dr(indices_or_mask, event_branches, plot_var, ax, string, co
     positive_entry = (accuracy > 0.0)
     n_entries = len(accuracy)
     sample_points = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,2,3,4,5,6,7,8,9,10,15,20]
-    cum_dR = [float(ak.sum(positive_entry & (accuracy < i))) / n_entries for i in sample_points]
+    cum_dR = [float(ak.sum(positive_entry & (accuracy < i))) / n_entries if n_entries > 0 else 0 for i in sample_points]
     ax.plot(sample_points, cum_dR, color=color, linewidth=1, label='dR')
     ax.set_ylim(0.0, 1.0)
 
     ax.set_xlabel('dR [cm]')
     ax.set_ylabel('Frac. of Interactions')
 
-    return {'empty': np.array([0,0])}
+    return {'dist_x' : sample_points, 'dist_y' : cum_dR, 'dist_x_label' : 'dR [cm]',
+            'dist_y_label' : 'Frac. of Interactions', 'dist_color' : color}
     
 ##############################################################################################
 

@@ -7,7 +7,7 @@ import ValidationFunc
 
 ####################################################################################################################################################
 
-def run_pfp_validation(plot_dir_path, config_target_mask, config_reco_mask, int_masks, tier_masks, pdg_masks, pfp_branches) :
+def run_pfp_validation(plot_dir_path, config_target_mask, config_best_match_mask, config_reco_mask, int_masks, tier_masks, pdg_masks, pfp_branches) :
     print('Running PFP Validation...')
     for tier in Definitions.tiers :     
         tier_mask = tier_masks[tier]
@@ -38,8 +38,12 @@ def run_pfp_validation(plot_dir_path, config_target_mask, config_reco_mask, int_
 
                     # Get masks
                     target_mask = tier_mask & int_mask & pdg_mask & config_target_mask
+                    best_match_mask = target_mask & config_best_match_mask
                     reco_mask = target_mask & config_reco_mask                    
-        
+
+                    if (np.count_nonzero(target_mask) == 0) :
+                        continue
+                    
                     # Efficiency Metrics
                     efficiency_metrics = ValidationFunc.CalculateEfficiencyMetrics(target_mask, reco_mask, True)
                     ValidationFunc.PrintEfficiencyTableEntry(tier, pdg, efficiency_metrics, f_efficiency)
@@ -48,7 +52,7 @@ def run_pfp_validation(plot_dir_path, config_target_mask, config_reco_mask, int_
                     ValidationFunc.create_plots({'reco' : reco_mask}, pfp_branches, ValidationFunc.TrackShowerAsAFunctionOf, Variables.PFP_track_shower_plotting_vars, f'{plot_dir_path}/TrackShower', plot_config)
                     
                     # Plot MCP_var distributions
-                    ValidationFunc.create_plots({'target' : target_mask}, pfp_branches, ValidationFunc.PlotVariable, Variables.PFP_MCP_plotting_vars, f'{plot_dir_path}/MC', plot_config)
+                    ValidationFunc.create_plots({'reco' : best_match_mask}, pfp_branches, ValidationFunc.PlotVariable, Variables.PFP_MCP_plotting_vars, f'{plot_dir_path}/MC', plot_config)
         
                     # Plot BM_var distributions
                     ValidationFunc.create_plots({'reco' : reco_mask}, pfp_branches, ValidationFunc.PlotVariable, Variables.PFP_BM_plotting_vars, f'{plot_dir_path}/BM', plot_config)
@@ -67,7 +71,7 @@ def run_pfp_validation(plot_dir_path, config_target_mask, config_reco_mask, int_
                     ValidationFunc.create_plots({'reco' : reco_mask}, pfp_branches, ValidationFunc.PlotDiffVariable, Variables.PFP_diff_plotting_vars, f'{plot_dir_path}/Diff', plot_config)
 
                     # Plot Profiles
-                    ValidationFunc.create_plots({'target' : target_mask}, pfp_branches, ValidationFunc.PlotProfileX, Variables.PFP_profile_vars, f'{plot_dir_path}/XProfile', plot_config)
+                    ValidationFunc.create_plots({'reco' : best_match_mask}, pfp_branches, ValidationFunc.PlotProfileX, Variables.PFP_profile_vars, f'{plot_dir_path}/XProfile', plot_config)
 
                     # 2D_var distributions
                     ValidationFunc.create_plots({'target' : target_mask}, pfp_branches, ValidationFunc.Plot2DHist, Variables.PFP_2D_vars, f'{plot_dir_path}/2D', plot_config)

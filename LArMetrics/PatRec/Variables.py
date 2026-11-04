@@ -50,23 +50,25 @@ Event_Reco_plotting_vars = [nu_vertex_accuracy]
 # PFP
 completeness = PlotVar('Completeness', 'BM_Completeness', 'Completeness', 'Frac. of MCParticles', [0,1.0], 25)
 purity = PlotVar('Purity', 'BM_Purity', 'Purity', 'Frac. of MCParticles', [0,1.0], 25)
+nMatches = PlotVar('NMatches', 'MC_AboveThresholdMatches', 'Frac. of MCParticles', 'NMatches', [-0.1, 3.1], 25)
 alt_completeness = PlotVar('AltCompleteness', 'ALT_Completeness', 'AltCompleteness', 'Frac. of MCParticles', [-1.01, 1.0], 50)
 alt_purity = PlotVar('AltPurity', 'ALT_Purity', 'AltPurity', 'Frac. of MCParticles', [-1.01, 1.0], 50)
-n_mc_hits_2d = PlotVar('NMCHits2D', 'MCP_NMCHits2D', 'NMCHits2D', 'Frac. of PFParticles', [0, 1500], 150)
+n_mc_hits_2d = PlotVar('NMCHits2D', 'MCP_NMCHits2D', 'NMCHits2D', 'Frac. of PFParticles', [0, 1400], 30)
 mc_displacement = PlotVar('Displacement', 'MCP_Displacement', 'MC Displacement [cm]', 'Frac. of PFParticles', [0, 100], 10)
 theta_xz = PlotVar('ThetaXZ', 'MCP_TrueThetaXZ', 'ThetaXZ [radians]', 'Frac. of PFParticles', [-3.5, 3.5], 25)
 theta_yz = PlotVar('ThetaYZ', 'MCP_TrueThetaYZ', 'ThetaYZ [radians]', 'Frac. of PFParticles', [-1.6, 1.6], 12)
 pfo_energy = PlotVar('TrueEnergy', 'MCP_TrueEnergy', 'True Particle Energy [GeV]', 'Frac. of PFParticles', [0,3], 50)
-true_vis_energy = PlotVar('TrueVisEnergy', 'MCP_TrueVisEnergy', 'True Visible Energy [GeV]', 'Frac. of PFParticles', [0,1], 50)
+true_vis_energy = PlotVar('TrueVisEnergy', 'MCP_TrueVisEnergy', 'True Visible Energy [GeV]', 'Frac. of PFParticles', [0,1], 25)
 pfo_signed_vertex_acc = PlotVar('VertexAcc', 'BM_VertexAcc', 'Signed Vertex deltaR [cm]', 'Frac. of PFParticles', [-25,25], 25)
-multiplicity = PlotVar('Multiplicity', 'MCNu_Multiplicity', 'N Reco Targets in Event', 'Frac. of PFParticles', [0,50], 50)    
+multiplicity = PlotVar('Multiplicity', 'MCNu_Multiplicity', 'N Reco Targets in Event', 'Frac. of PFParticles', [0,30], 15)    
 shower_multiplicity = PlotVar('ShowerMultiplicity', 'MCNu_ShowerMultiplicity', 'N Reco Showers in Event', 'Frac. of PFParticles', [0,20], 20)
 track_multiplicity = PlotVar('TrackMultiplicity', 'MCNu_TrackMultiplicity', 'N Reco Track in Event', 'Frac. of PFParticles', [0,20], 20)
-PFP_MCP_plotting_vars = [completeness, purity, n_mc_hits_2d, true_vis_energy, theta_xz, theta_yz]
+mc_length = PlotVar('Length', 'MCP_Length', 'MC Track Length [cm]', 'Frac. of PFParticles', [0, 5000], 100)
+PFP_MCP_plotting_vars = [completeness, purity, n_mc_hits_2d, true_vis_energy, theta_xz, theta_yz, mc_length]
 PFP_BM_plotting_vars = [pfo_signed_vertex_acc]
 PFP_ALT_plotting_vars = [alt_completeness, alt_purity]
 PFP_track_shower_plotting_vars = [n_mc_hits_2d, theta_xz, theta_yz]
-PFP_efficiency_vars = [n_mc_hits_2d, theta_xz, theta_yz, true_vis_energy, mc_displacement, multiplicity, shower_multiplicity, track_multiplicity]
+PFP_efficiency_vars = [n_mc_hits_2d, theta_xz, theta_yz, true_vis_energy, mc_displacement, multiplicity, shower_multiplicity, track_multiplicity, pfo_energy]
 
 # Michel
 michel_true_vis_energy = PlotVar('TrueVisEnergy', 'MCP_TrueVisEnergy', 'True Visible Energy [GeV]', 'Frac. of Michels', [0,0.06], 24)
@@ -102,7 +104,10 @@ Shower_BM_plotting_vars = [shower_dir_acc, shower_moliere]
 # # PFP
 length_diff_var = PlotDiffVar('DeltaLength', 'MCP_Length', 'BM_Length', 'TrueRecoLength', 'Frac. of PFParticles', [-100, 100], 50)
 displacement_diff_var = PlotDiffVar('DeltaDisplacement', 'MCP_Displacement', 'BM_Displacement', 'True-Reco Displacement', 'Frac. of PFParticles', [-20, 20], 20)
-PFP_diff_plotting_vars = [length_diff_var, displacement_diff_var]
+vertex_x_diff_var = PlotDiffVar('DeltaVertexX', 'MCP_VertexX', 'BM_VertexX', 'True-Reco VertexX', 'Frac. of PFParticles', [-20, 20], 20)
+vertex_y_diff_var = PlotDiffVar('DeltaVertexY', 'MCP_VertexY', 'BM_VertexY', 'True-Reco VertexY', 'Frac. of PFParticles', [-20, 20], 20)
+vertex_z_diff_var = PlotDiffVar('DeltaVertexZ', 'MCP_VertexZ', 'BM_VertexZ', 'True-Reco VertexZ', 'Frac. of PFParticles', [-20, 20], 20)
+PFP_diff_plotting_vars = [length_diff_var, displacement_diff_var, vertex_x_diff_var, vertex_y_diff_var, vertex_z_diff_var]
 
 # Shower
 core_length_diff = PlotDiffVar('DeltaCoreLengthFromW', 'MCP_TrueCoreLengthFromW', 'BM_RecoCoreLength', 'True-Reco Core Length (from W) [cm]', 'Frac. of Reco Showers', [-50, 50], 50)
@@ -132,11 +137,13 @@ ALT_seg_vars = [alt_pfp_seg_var, alt_is_up_hierarchy_seg_var, alt_is_same_mc_var
 # PFP
 pfp_completeness_true_vis_energy = TwoVar('Completeness_VisEnergy', true_vis_energy, completeness)
 pfp_completeness_n_mc_hits = TwoVar('Completeness_NMCHits2D', n_mc_hits_2d, completeness)
+pfp_completeness_multiplicity = TwoVar('Completeness_Multiplicity', multiplicity, completeness)
 pfp_purity_true_vis_energy = TwoVar('Purity_VisEnergy', true_vis_energy, purity)
 pfp_purity_n_mc_hits = TwoVar('Purity_NMCHits2D', n_mc_hits_2d, purity)
+pfp_purity_multiplicity = TwoVar('Purity_Multiplicity', multiplicity, purity)
 
-PFP_profile_vars = [pfp_completeness_true_vis_energy, pfp_completeness_n_mc_hits,
-                    pfp_purity_true_vis_energy, pfp_purity_n_mc_hits]
+PFP_profile_vars = [pfp_completeness_true_vis_energy, pfp_completeness_n_mc_hits, pfp_completeness_multiplicity,
+                    pfp_purity_true_vis_energy, pfp_purity_n_mc_hits, pfp_purity_multiplicity]
 
 ###############################################
 # 2D Var
