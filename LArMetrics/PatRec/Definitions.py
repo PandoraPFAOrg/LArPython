@@ -105,7 +105,6 @@ def GetIntMasks(event_branches, pfp_branches, broadcast=True) :
 ##############################################################################################
 
 def GetBalancedIntMasks(event_branches, pfp_branches, broadcast=True, seed=42):
-
     rng = np.random.default_rng(seed)
 
     # Get event-level interaction information
@@ -131,18 +130,10 @@ def GetBalancedIntMasks(event_branches, pfp_branches, broadcast=True, seed=42):
     balanced_event_masks = {}
 
     for key, mask in event_masks.items():
-
         indices = np.where(ak.to_numpy(mask))[0]
-
-        selected = rng.choice(
-            indices,
-            size=min_count,
-            replace=False
-        )
-
+        selected = rng.choice(indices, size=min_count, replace=False)
         balanced_mask = np.zeros(len(mask), dtype=bool)
         balanced_mask[selected] = True
-
         balanced_event_masks[key] = ak.Array(balanced_mask)
 
     # Create the combined interaction mask
