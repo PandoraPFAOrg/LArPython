@@ -48,8 +48,9 @@ def create_plots(masks, branches, plot_func, plot_vars, sub_dir, plot_config) :
             file_data = plot_func(next(iter(masks.values())), branches, plot_var, ax, plot_config.pdg_string, plot_config.color)
         else :
             file_data = plot_func(masks['target'], masks['reco'], branches, plot_var, ax, plot_config.pdg_string, plot_config.color)
-            
-        save_plot(fig, f'{sub_dir}/{plot_var.dir_name}/{plot_config.file_name}', file_data)
+
+        if (file_data is not None) :
+            save_plot(fig, f'{sub_dir}/{plot_var.dir_name}/{plot_config.file_name}', file_data)
 
 ##############################################################################################    
 
@@ -146,6 +147,9 @@ def Plot2DHist(indices_or_mask, branches, two_plot_var, ax, label, color) :
     if target_y_entries.ndim > 1:
         target_y_entries = ak.flatten(target_y_entries)        
 
+    if ((len(target_x_entries) == 0) or (len(target_y_entries) == 0)) :
+        return
+        
     target_x_entries = ak.to_numpy(target_x_entries).reshape(-1)
     target_y_entries = ak.to_numpy(target_y_entries).reshape(-1)
     
@@ -202,6 +206,9 @@ def PlotProfileX(indices_or_mask, branches, profile_var, ax, label, color):
     if target_y_entries.ndim > 1:
         target_y_entries = ak.flatten(target_y_entries)
 
+    if ((len(target_x_entries) == 0) or (len(target_y_entries) == 0)) :
+        return
+        
     # Mean
     mean_y, x_edges, _ = binned_statistic(target_x_entries, target_y_entries,
         statistic='mean', bins=profile_var.plot_var_x.n_bins, range=profile_var.plot_var_x.range)
@@ -231,7 +238,8 @@ def PlotProfileX(indices_or_mask, branches, profile_var, ax, label, color):
     ax.set_ylim(profile_var.plot_var_y.range)
     ax.grid(True)
 
-    plot_data = {'profile_x' : x_centers[valid], 'profile_y' : mean_y[valid], 'profile_y_err' : sem_y[valid]}
+    plot_data = {'profile_x' : x_centers[valid], 'profile_y' : mean_y[valid], 'profile_y_err' : sem_y[valid],
+                 'profile_x_label' : profile_var.plot_var_x.x_label, 'profile_y_label' : f'Mean {profile_var.plot_var_y.x_label}'}
     
     # Add in underlying distribution 
     ax2 = ax.twinx()
@@ -256,19 +264,25 @@ def PlotDiffVariable(indices_or_mask, branches, plot_diff_var, ax, label, color)
 
     if (n_target_entries == 0) :
         return
-    
-    weights = np.ones(n_target_entries) * (1.0 / n_target_entries)
-    ax.set_xlabel(plot_diff_var.x_label)
-    ax.set_ylabel(plot_diff_var.y_label)
-    ax.hist(target_entries, bins=plot_diff_var.n_bins, range=plot_diff_var.range, weights=weights, histtype='step', color=color, linewidth=1, label=(f' {label} '))
 
-    return {'empty': np.array([0,0])}
+    hist_counts, bin_edges = np.histogram(target_entries, bins=plot_diff_var.n_bins, range=plot_diff_var.range)
+    hist_fraction = hist_counts / n_target_entries
+    bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:]) 
+
+    ax.step(bin_centers, hist_fraction, where='mid', color=color, linewidth=1, label=f'{label}')
+    ax.fill_between(bin_centers,hist_fraction,step='mid',color=color, alpha=0.3)
+
+    return {'dist_x' : bin_centers, 'dist_y' : hist_fraction, 'dist_x_label' : plot_diff_var.x_label,
+            'dist_y_label' : plot_diff_var.y_label, 'dist_color' : color}
 
 ##############################################################################################
 
 def PlotEfficiency(target_mask_or_indices, reco_mask_or_indices, pfp_branches, plot_var, ax, legend_string, color) :
     target_entries = ak.to_numpy(ak.flatten(pfp_branches[plot_var.tree_name][target_mask_or_indices]))
     reco_entries = ak.to_numpy(ak.flatten(pfp_branches[plot_var.tree_name][reco_mask_or_indices]))
+
+    if (len(target_entries) == 0) :
+        return
     
     hist_target, edges = np.histogram(target_entries, bins=plot_var.n_bins, range=plot_var.range)
     hist_reco, _ = np.histogram(reco_entries, bins=plot_var.n_bins, range=plot_var.range)
@@ -285,7 +299,7 @@ def PlotEfficiency(target_mask_or_indices, reco_mask_or_indices, pfp_branches, p
     ax.errorbar(bin_centers, efficiency, yerr=efficiency_err, fmt='x-', color='black', capsize=3, label=f' {legend_string} ')
     ax.set_xlabel(plot_var.x_label)
     ax.set_ylabel('Efficiency')
-    ax.set_ylim([0, 1.0])
+    ax.set_ylim([0, 1.1])
     ax.grid(True)
 
     plot_data = {'efficiency_x' : bin_centers, 'efficiency_y' : efficiency, 'efficiency_y_err' : efficiency_err,
@@ -317,6 +331,9 @@ def Plot2DEfficiency(target_mask_or_indices, reco_mask_or_indices, branches, plo
     if reco_y_entries.ndim > 1:
         reco_y_entries = ak.flatten(reco_y_entries)         
 
+    if ((len(target_x_entries) == 0) or (len(target_y_entries) == 0)) :
+        return
+        
     target_x_entries = ak.to_numpy(target_x_entries).reshape(-1)
     target_y_entries = ak.to_numpy(target_y_entries).reshape(-1)
     reco_x_entries = ak.to_numpy(reco_x_entries).reshape(-1)

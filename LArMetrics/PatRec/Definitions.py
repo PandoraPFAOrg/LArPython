@@ -1,4 +1,5 @@
 import awkward as ak
+import numpy as np
 
 ##############################################################################################
 
@@ -103,6 +104,61 @@ def GetIntMasks(event_branches, pfp_branches, broadcast=True) :
 
 ##############################################################################################
 
+def GetBalancedIntMasks(event_branches, pfp_branches, broadcast=True, seed=42):
+    rng = np.random.default_rng(seed)
+
+    # Get event-level interaction information
+    mc_iscc = event_branches['MCInt_IsCC']
+    mc_nupdg = event_branches['MCNu_PDG']
+
+    # Define event-level interaction masks
+    event_masks = {
+        0: (mc_iscc == 1) & (abs(mc_nupdg) == 14),  # CCnumu
+        1: (mc_iscc == 1) & (abs(mc_nupdg) == 12),  # CCnue
+        2: (mc_iscc == 0),                          # NC
+    }
+
+    # Find the size of the smallest interaction category
+    counts = {
+        key: int(ak.sum(mask))
+        for key, mask in event_masks.items()
+    }
+
+    min_count = min(counts.values())
+
+    # Randomly select the same number of events from each category
+    balanced_event_masks = {}
+
+    for key, mask in event_masks.items():
+        indices = np.where(ak.to_numpy(mask))[0]
+        selected = rng.choice(indices, size=min_count, replace=False)
+        balanced_mask = np.zeros(len(mask), dtype=bool)
+        balanced_mask[selected] = True
+        balanced_event_masks[key] = ak.Array(balanced_mask)
+
+    # Create the combined interaction mask
+    balanced_event_masks[3] = (
+        balanced_event_masks[0] |
+        balanced_event_masks[1] |
+        balanced_event_masks[2]
+    )
+
+    # Return event-level masks if not broadcasting
+    if not broadcast:
+        return balanced_event_masks
+
+    # Broadcast event-level masks to the PFP level
+    mc_pdg = pfp_branches['MCP_TruePDG']
+
+    balanced_pfp_masks = {
+        key: ak.broadcast_arrays(mask, mc_pdg)[0]
+        for key, mask in balanced_event_masks.items()
+    }
+
+    return balanced_pfp_masks
+
+##############################################################################################
+
 def GetIsTargetMask(pfp_branches) :
     mc_nHitsU = pfp_branches['MCP_NMCHitsU']
     mc_nHitsV = pfp_branches['MCP_NMCHitsV']
@@ -122,6 +178,15 @@ def GetIsRecoMask(pfp_target_mask, pfp_branches) :
     completeness = pfp_branches['BM_Completeness']
     purity = pfp_branches['BM_Purity']
     pfp_reco_mask = pfp_target_mask & (completeness >= MIN_COMPLETENESS) & (purity >= MIN_PURITY)
+    
+    return pfp_reco_mask    
+
+##############################################################################################
+
+def GetIsBestMatchMask(pfp_target_mask, pfp_branches) :
+    completeness = pfp_branches['BM_Completeness']
+    purity = pfp_branches['BM_Purity']
+    pfp_reco_mask = pfp_target_mask & (completeness >= 0.01) & (purity >= 0.01)
     
     return pfp_reco_mask    
 

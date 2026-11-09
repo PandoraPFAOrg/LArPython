@@ -15,6 +15,9 @@ import TrackValidationFunc
 ##########################################################################################################
 
 def main(args) :
+    Definitions.ints = args.ints
+    Definitions.tiers = args.tiers
+    Definitions.pdgs = args.pdgs
 
     file_name = f'{args.validation_file}'
     with uproot.open(file_name) as file:    
@@ -31,8 +34,10 @@ def main(args) :
 
         pfp_branches = pfp_tree.arrays(['MCP_TruePDG', 'MCP_TrueEnergy', 'MCP_TrueVisEnergy', 'MCP_TrueThetaXZ', 'MCP_TrueThetaYZ',
                                         'MCP_NMCHits2D', 'MCP_NMCHitsU', 'MCP_NMCHitsV', 'MCP_NMCHitsW',
+                                        'MCP_VertexX', 'MCP_VertexY', 'MCP_VertexZ',
+                                        'BM_VertexX', 'BM_VertexY', 'BM_VertexZ',
                                         'BM_NPfoHitsU', 'BM_NPfoHitsV', 'BM_NPfoHitsW',
-                                        'MCP_HasMatch', 'MCP_Length', 'MCP_Displacement',
+                                        'MCP_HasMatch', 'MCP_Length', 'MCP_Displacement', 'MCP_VertexX', 'MCP_EndX',
                                         'BM_IsTrack', 'BM_IsShower',
                                         'BM_Completeness', 'BM_CompletenessU', 'BM_CompletenessV', 'BM_CompletenessW',
                                         'BM_Purity', 'BM_PurityU', 'BM_PurityV', 'BM_PurityW',
@@ -95,8 +100,12 @@ def main(args) :
     ###################################
     # Create interaction/tier/PDG masks
     ###################################
-    int_masks = Definitions.GetIntMasks(event_branches, pfp_branches={}, broadcast=False)
-    int_masks_broadcast = Definitions.GetIntMasks(event_branches, pfp_branches)
+    int_masks = Definitions.GetBalancedIntMasks(event_branches, pfp_branches={}, broadcast=False) if args.balance_file else \
+        Definitions.GetIntMasks(event_branches, pfp_branches={}, broadcast=False)
+
+    int_masks_broadcast = Definitions.GetBalancedIntMasks(event_branches, pfp_branches) if args.balance_file else \
+        Definitions.GetIntMasks(event_branches, pfp_branches)
+
     pdg_masks = Definitions.GetPDGMasks(pfp_branches)
     tier_masks = Definitions.GetTierMasks(hierarchy_branches)
 
@@ -107,6 +116,7 @@ def main(args) :
     # The tree constains some particles that we reconstructed, even if not initially deemed to be a target
     pfp_target_mask = Definitions.GetIsTargetMask(pfp_branches)
     pfp_reco_mask = Definitions.GetIsRecoMask(pfp_target_mask, pfp_branches)
+    pfp_best_match_mask = Definitions.GetIsBestMatchMask(pfp_target_mask, pfp_branches)
 
     #######################
     # Add multiplicity info
@@ -133,7 +143,7 @@ def main(args) :
     HierarchyValidationFunc.run_hierarchy_validation(hierarchy_plot_dir, pfp_target_mask, pfp_reco_mask, int_masks_broadcast, tier_masks, pdg_masks, hierarchy_branches, pfp_branches)
     # PFP Validation Plots
     pfp_plot_dir = f'{args.plot_dir}/PFPValidation/'
-    PFPValidationFunc.run_pfp_validation(pfp_plot_dir, pfp_target_mask, pfp_reco_mask, int_masks, tier_masks, pdg_masks, pfp_branches)
+    PFPValidationFunc.run_pfp_validation(pfp_plot_dir, pfp_target_mask, pfp_best_match_mask, pfp_reco_mask, int_masks_broadcast, tier_masks, pdg_masks, pfp_branches)
     # Shower Validation Plots
     shower_plot_dir = f'{args.plot_dir}/ShowerValidation/'
     ShowerValidationFunc.run_shower_validation(shower_plot_dir, pfp_target_mask, pfp_reco_mask, int_masks_broadcast, tier_masks, pdg_masks, shower_branches)
@@ -219,6 +229,10 @@ def parse_cli():
     parser = argparse.ArgumentParser(description="Validation script for Pandora.")
     parser.add_argument("--plot_dir", type=str, required=True, help="Directory for storing plots.")
     parser.add_argument("--validation_file", type=str, required=True, help="Path to the validation file.")
+    parser.add_argument("--ints", nargs="+", type=int, default=[0,1,2,3], help="List of interaction types to validate.")
+    parser.add_argument("--tiers", nargs="+", type=int, default=[0,1,2], help="List of tiers to validate.")
+    parser.add_argument("--pdgs", nargs="+", type=int, default=[13, 2212, 211, Definitions.MICHEL_PDG, 22, 11, 111, -111, 0], help="List of PDGs to validate.")
+    parser.add_argument("--balance_file", action="store_true", help="Path to the balanced validation file.")
     return parser.parse_args()
 
 ##########################################################################################################
